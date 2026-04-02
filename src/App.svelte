@@ -60,28 +60,32 @@
     return fmt;
   }
 
+  /** CoinGecko blocks browser CORS; production uses Vercel `/api/*` proxies. */
   function getCurrentPrice(token) {
-    fetch(
-      `https://api.coingecko.com/api/v3/simple/price?ids=${token}&vs_currencies=usd`
-    )
+    const q = new URLSearchParams({
+      ids: token,
+      vs_currencies: "usd",
+    });
+    fetch(`/api/coingecko-simple-price?${q}`)
       .then((response) => response.json())
       .then((data) => {
         if (token === "bella-protocol")
           belCurrentPrice = data["bella-protocol"].usd;
         else arpaCurrentPrice = data.arpa.usd;
-      });
+      })
+      .catch(() => {});
   }
 
   function getHistoricalPrice(token, date) {
-    fetch(
-      `https://api.coingecko.com/api/v3/coins/${token}/history?date=${date}`
-    )
+    const q = new URLSearchParams({ id: token, date });
+    fetch(`/api/coingecko-history?${q}`)
       .then((response) => response.json())
       .then((data) => {
         if (token === "bella-protocol")
           belHistoricalPrice = data.market_data.current_price.usd;
         else arpaHistoricalPrice = data.market_data.current_price.usd;
-      });
+      })
+      .catch(() => {});
   }
 </script>
 
