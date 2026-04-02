@@ -1,6 +1,7 @@
 <script lang="ts">
   import { decToBin, decToHex, hexToBin, hexToDec } from "./converter.js";
   import { DateInput } from "date-picker-svelte";
+  import BinanceVolMonitor from "./BinanceVolMonitor.svelte";
 
   let decimal1: string;
   let binary1;
@@ -153,6 +154,8 @@
     price: {belHistoricalPrice === undefined ? "..." : belHistoricalPrice} USD
   </div>
 </main>
+
+<BinanceVolMonitor />
 
 <style>
   h1 {
