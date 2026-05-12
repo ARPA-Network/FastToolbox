@@ -894,24 +894,21 @@
 </section>
 
 <style>
+  /* Align with App `ft-panel`: same surface, radius, shadow — no ivory “paper” cards */
   .bv-wrap {
     width: 100%;
     max-width: 1080px;
     margin: 2rem auto 2.75rem;
-    padding: 2rem 1.5rem 2.25rem;
+    padding: 1.5rem 1.35rem 1.75rem;
     box-sizing: border-box;
-    border-radius: 20px;
-    border: 1px solid var(--ft-line-strong, rgba(255, 255, 255, 0.12));
+    border-radius: var(--ft-radius, 14px);
+    border: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
     background: linear-gradient(
-      155deg,
-      rgba(26, 30, 38, 0.88) 0%,
-      rgba(14, 16, 20, 0.94) 55%,
-      rgba(12, 14, 18, 0.98) 100%
+      160deg,
+      rgba(28, 32, 41, 0.92) 0%,
+      rgba(18, 20, 26, 0.96) 100%
     );
-    box-shadow:
-      0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-      0 28px 60px rgba(0, 0, 0, 0.42),
-      0 0 80px -30px var(--ft-accent-glow, rgba(201, 169, 98, 0.2));
+    box-shadow: var(--ft-shadow, 0 20px 50px rgba(0, 0, 0, 0.45));
     position: relative;
     overflow: hidden;
   }
@@ -919,17 +916,15 @@
   .bv-wrap::before {
     content: "";
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
+    inset: 0 0 auto 0;
+    height: 3px;
     background: linear-gradient(
       90deg,
       transparent,
-      rgba(201, 169, 98, 0.45),
+      rgba(201, 169, 98, 0.25),
       transparent
     );
-    opacity: 0.85;
+    opacity: 0.9;
     pointer-events: none;
   }
 
@@ -974,7 +969,7 @@
     max-width: 44rem;
     padding: 0.65rem 0.75rem;
     border-radius: var(--ft-radius-sm, 10px);
-    background: rgba(0, 0, 0, 0.22);
+    background: rgba(0, 0, 0, 0.28);
     border: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
   }
 
@@ -1003,17 +998,17 @@
   }
 
   .bv-refresh {
-    padding: 0.62rem 1.35rem;
+    padding: 0.62rem 1.25rem;
     font-size: 0.68rem;
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
     border-radius: 999px;
     cursor: pointer;
-    border: 1px solid rgba(74, 124, 98, 0.55);
-    background: linear-gradient(165deg, #2f5d47 0%, #1e3d2e 100%);
-    color: #f4faf6;
-    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--ft-line-strong, rgba(255, 255, 255, 0.12));
+    background: linear-gradient(165deg, #1e2620 0%, #141a16 100%);
+    color: var(--ft-text, #e9e6e1);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
     transition:
       transform 0.12s ease,
       box-shadow 0.18s ease,
@@ -1021,19 +1016,20 @@
   }
 
   .bv-refresh-secondary {
-    border-color: rgba(100, 130, 180, 0.45);
-    background: linear-gradient(165deg, #2c3f5c 0%, #1a2740 100%);
-    color: #e8eef8;
+    border-color: var(--ft-line-strong, rgba(255, 255, 255, 0.12));
+    background: linear-gradient(165deg, #222630 0%, #171a22 100%);
+    color: var(--ft-text, #e9e6e1);
   }
 
   .bv-refresh-secondary:hover:not(:disabled) {
-    border-color: rgba(140, 170, 220, 0.55);
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+    border-color: rgba(201, 169, 98, 0.35);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
   }
 
   .bv-refresh:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
+    border-color: rgba(201, 169, 98, 0.4);
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.38);
   }
 
   .bv-refresh:disabled {
@@ -1090,81 +1086,78 @@
   .bv-cards {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.35rem;
+    gap: 1.25rem;
     justify-content: center;
     align-items: stretch;
   }
 
   .bv-card {
-    background: linear-gradient(
-      165deg,
-      var(--ft-paper, #ebe6dc) 0%,
-      var(--ft-paper2, #e2dcd2) 100%
-    );
-    border: none;
-    border-radius: 16px;
-    padding: 1.35rem 1.4rem 1.25rem;
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
+    border-radius: var(--ft-radius, 14px);
+    padding: 1.25rem 1.3rem 1.15rem;
     min-width: 260px;
     flex: 1;
     max-width: 420px;
     box-sizing: border-box;
-    box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.65) inset,
-      0 14px 32px rgba(0, 0, 0, 0.28);
-    color: #14161a;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset;
+    color: var(--ft-text, #e9e6e1);
     position: relative;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease;
   }
 
   .bv-card:hover {
-    transform: translateY(-2px);
+    border-color: var(--ft-line-strong, rgba(255, 255, 255, 0.12));
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.65) inset,
-      0 22px 44px rgba(0, 0, 0, 0.32);
+      0 1px 0 rgba(255, 255, 255, 0.05) inset,
+      0 12px 28px rgba(0, 0, 0, 0.25);
   }
 
   .bv-card.bv-ok {
+    border-color: rgba(74, 222, 128, 0.2);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.65) inset,
-      0 0 0 1px rgba(45, 106, 79, 0.25),
-      0 14px 32px rgba(0, 0, 0, 0.22);
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 0 0 1px rgba(74, 222, 128, 0.08);
   }
 
   .bv-card.bv-ok::after {
     content: "";
     position: absolute;
     left: 0;
-    top: 12%;
-    bottom: 12%;
+    top: 14%;
+    bottom: 14%;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: linear-gradient(180deg, #40916c, #2d6a4f);
-    opacity: 0.85;
+    background: linear-gradient(180deg, #4ade80, #16a34a);
+    opacity: 0.75;
   }
 
   .bv-card.bv-warn {
+    border-color: rgba(250, 204, 21, 0.28);
     box-shadow:
-      0 1px 0 rgba(255, 255, 255, 0.55) inset,
-      0 0 0 1px rgba(180, 130, 40, 0.35),
-      0 14px 32px rgba(0, 0, 0, 0.22);
+      0 1px 0 rgba(255, 255, 255, 0.04) inset,
+      0 0 0 1px rgba(250, 204, 21, 0.1);
   }
 
   .bv-card.bv-warn::after {
     content: "";
     position: absolute;
     left: 0;
-    top: 12%;
-    bottom: 12%;
+    top: 14%;
+    bottom: 14%;
     width: 3px;
     border-radius: 0 3px 3px 0;
-    background: linear-gradient(180deg, #d4a017, #a16207);
-    opacity: 0.9;
+    background: linear-gradient(180deg, #facc15, #ca8a04);
+    opacity: 0.85;
   }
 
   .bv-card.bv-error {
-    background: linear-gradient(165deg, #2a1818 0%, #1a1012 100%);
-    color: #f5e0e4;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    background: rgba(40, 18, 22, 0.55);
+    border-color: rgba(248, 113, 113, 0.25);
+    color: #fce7e9;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
   }
 
   .bv-card.bv-error:hover {
@@ -1173,11 +1166,12 @@
 
   .bv-symbol {
     font-family: var(--ft-font-ui, "Sora", sans-serif);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 600;
-    margin-bottom: 0.85rem;
-    letter-spacing: 0.06em;
-    color: #0f1114;
+    margin-bottom: 0.75rem;
+    letter-spacing: 0.08em;
+    color: var(--ft-text, #e9e6e1);
+    font-variant-numeric: tabular-nums;
   }
 
   .bv-card.bv-error .bv-symbol {
@@ -1189,13 +1183,13 @@
     justify-content: space-between;
     align-items: baseline;
     gap: 0.75rem;
-    padding: 0.42rem 0;
-    border-bottom: 1px solid rgba(20, 22, 26, 0.08);
-    font-size: 0.86rem;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
+    font-size: 0.84rem;
   }
 
   .bv-card.bv-error .bv-row {
-    border-bottom-color: rgba(255, 255, 255, 0.08);
+    border-bottom-color: rgba(255, 255, 255, 0.1);
   }
 
   .bv-row:last-of-type {
@@ -1203,11 +1197,11 @@
   }
 
   .bv-label {
-    color: rgba(20, 22, 26, 0.55);
+    color: var(--ft-text-soft, #a39e96);
     flex-shrink: 0;
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     font-weight: 500;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.03em;
   }
 
   .bv-card.bv-error .bv-label {
@@ -1215,10 +1209,12 @@
   }
 
   .bv-value {
-    color: #12151c;
-    font-weight: 600;
+    color: var(--ft-text, #e9e6e1);
+    font-weight: 500;
     text-align: right;
     font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum" 1;
+    letter-spacing: 0.02em;
   }
 
   .bv-card.bv-error .bv-value {
@@ -1226,32 +1222,32 @@
   }
 
   .bv-status-warn {
-    color: #9a3412;
+    color: #fbbf24;
     font-weight: 600;
   }
 
   .bv-status-ok {
-    color: #166534;
+    color: #86efac;
     font-weight: 600;
   }
 
   .bv-section {
-    margin-top: 1rem;
-    padding-top: 0.55rem;
-    border-top: 1px solid rgba(20, 22, 26, 0.1);
-    font-size: 0.68rem;
+    margin-top: 0.95rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
+    font-size: 0.65rem;
     font-weight: 600;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: rgba(20, 22, 26, 0.45);
+    color: var(--ft-muted, #6d6860);
   }
 
   .bv-footnote {
     margin: 1rem 0 0;
     padding-top: 0.75rem;
-    border-top: 1px solid rgba(20, 22, 26, 0.08);
-    font-size: 0.7rem;
-    color: rgba(20, 22, 26, 0.5);
+    border-top: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
+    font-size: 0.68rem;
+    color: var(--ft-muted, #6d6860);
     line-height: 1.45;
     font-weight: 400;
   }
