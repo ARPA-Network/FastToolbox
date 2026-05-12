@@ -18,6 +18,17 @@
    */
   const RANK_SNAPSHOT_URL_DEFAULT = "/api/vol-snapshot-proxy";
 
+  /** `AbortSignal.timeout` is missing on some browsers; without this, fetch throws synchronously and snapshot load fails silently (empty ranks). */
+  function fetchSignal(ms: number): AbortSignal {
+    const AS = typeof AbortSignal !== "undefined" ? AbortSignal : null;
+    if (AS && typeof (AS as unknown as { timeout?: (n: number) => AbortSignal }).timeout === "function") {
+      return (AS as unknown as { timeout: (n: number) => AbortSignal }).timeout(ms);
+    }
+    const c = new AbortController();
+    setTimeout(() => c.abort(), ms);
+    return c.signal;
+  }
+
   type RankInfo = {
     rank: number;
     total: number;
@@ -236,7 +247,7 @@
     const url = `https://api.binance.com/api/v3/klines?symbol=${encodeURIComponent(
       symbol
     )}&interval=1d&limit=${KLINE_LIMIT}`;
-    const res = await fetch(url, { signal: AbortSignal.timeout(25000) });
+    const res = await fetch(url, { signal: fetchSignal(25000) });
     if (!res.ok) throw new Error(`klines ${symbol} HTTP ${res.status}`);
     const klines = (await res.json()) as unknown[];
     const qv7 = sumQuoteVolLastN(klines, 7);
@@ -249,12 +260,15 @@
     const url = getRankSnapshotUrl();
     if (!url) return null;
     try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(20000) });
+      const res = await fetch(url, { signal: fetchSignal(20000) });
       if (!res.ok) return null;
       const j = (await res.json()) as RankSnap;
       if (!j || typeof j !== "object" || !j.targets) return null;
       return j;
-    } catch {
+    } catch (e) {
+      if (typeof console !== "undefined" && console.warn) {
+        console.warn("[volMon] rank snapshot fetch failed:", e);
+      }
       return null;
     }
   }
@@ -275,8 +289,8 @@
 
   async function load24hData() {
     const [tickerRes, infoRes] = await Promise.all([
-      fetch(TICKER_24HR_URL, { signal: AbortSignal.timeout(20000) }),
-      fetch(EXCHANGE_INFO_URL, { signal: AbortSignal.timeout(20000) }),
+      fetch(TICKER_24HR_URL, { signal: fetchSignal(20000) }),
+      fetch(EXCHANGE_INFO_URL, { signal: fetchSignal(20000) }),
     ]);
     if (!tickerRes.ok) throw new Error(`ticker ${tickerRes.status}`);
     if (!infoRes.ok) throw new Error(`exchangeInfo ${infoRes.status}`);
@@ -378,6 +392,8 @@
     const { spotUsdt, allUsdt } = state24h;
     const rankSnap = stateWeekly?.rankSnap ?? null;
     const url = getRankSnapshotUrl();
+    const urlNote =
+      url.length > 72 ? `${url.slice(0, 70)}…` : url;
     const snapHint = rankSnap
       ? rankSnap.mode === "light"
         ? ` Light rank snapshot loaded (7d/30d quote Σ only; no full-market ranks — use full refresh on server). Snapshot time ${snapshotTimeText(rankSnap) || "—"}.`
@@ -389,6 +405,7 @@
     return (
       `Universe: spot USDT (exchangeInfo) ${spotUsdt.length} pairs; ` +
       `all *USDT tickers (coarse) ${allUsdt.length}. ` +
+      `Snapshot URL: ${urlNote}. ` +
       ` "Refresh 24h" updates ticker only; weekly/monthly auto-refresh every ${WEEKLY_REFRESH_MINUTES} min.` +
       snapHint +
       ` Daily-K localStorage TTL ${KLINE_CACHE_TTL_MS / 60000} min; ${KLINES_INTERVAL_MS} ms between symbol requests.`
@@ -635,13 +652,7 @@
               <span class="bv-value">{item.volume} USDT</span>
             </div>
 
-            <div class="bv-section">Weekly / monthly (rolling daily-K quote volume)</div>
-            {#if lv.longErr}
-              <div class="bv-row">
-                <span class="bv-label">K-lines request</span>
-                <span class="bv-value bv-status-warn">Failed: {lv.longErr}</span>
-              </div>
-            {:else}
+            {#if !lv.longErr}
               {@const has24Snap =
                 lv.rank24 != null && lv.total24 != null}
               {@const pct24Num =
@@ -649,6 +660,36 @@
                   ? Number(lv.pct24)
                   : null}
               {@const st24 = pct24Num != null ? bottom20Status(pct24Num) : null}
+              {#if has24Snap}
+                <div class="bv-section">24h snapshot (spot USDT universe, server)</div>
+                <div class="bv-row">
+                  <span class="bv-label">Rank</span>
+                  <span class="bv-value">{lv.rank24} / {lv.total24}</span>
+                </div>
+                <div class="bv-row">
+                  <span class="bv-label">Percentile</span>
+                  <span class="bv-value"
+                    >{pct24Num != null ? fmtPct(pct24Num) : "—"}</span
+                  >
+                </div>
+                <div class="bv-row">
+                  <span class="bv-label">Bottom 20%</span>
+                  <span
+                    class="bv-value"
+                    class:bv-status-warn={st24?.bad}
+                    class:bv-status-ok={st24 && !st24.bad}>{st24 ? st24.text : "—"}</span
+                  >
+                </div>
+              {/if}
+            {/if}
+
+            <div class="bv-section">Weekly / monthly (rolling daily-K quote volume)</div>
+            {#if lv.longErr}
+              <div class="bv-row">
+                <span class="bv-label">K-lines request</span>
+                <span class="bv-value bv-status-warn">Failed: {lv.longErr}</span>
+              </div>
+            {:else}
               {@const pct7Num =
                 lv.pct7 != null && !Number.isNaN(Number(lv.pct7))
                   ? Number(lv.pct7)
@@ -664,26 +705,6 @@
               {@const has30Rank =
                 lv.rank30 != null && lv.total30 != null}
               {@const rankPctDash = rankPctDashMsg(stateWeekly?.rankSnap ?? null)}
-              {#if has24Snap}
-                <div class="bv-row">
-                  <span class="bv-label">24h rank (snapshot universe)</span>
-                  <span class="bv-value">{lv.rank24} / {lv.total24}</span>
-                </div>
-                <div class="bv-row">
-                  <span class="bv-label">24h percentile (snapshot)</span>
-                  <span class="bv-value"
-                    >{pct24Num != null ? fmtPct(pct24Num) : "—"}</span
-                  >
-                </div>
-                <div class="bv-row">
-                  <span class="bv-label">24h bottom 20% (snapshot)</span>
-                  <span
-                    class="bv-value"
-                    class:bv-status-warn={st24?.bad}
-                    class:bv-status-ok={st24 && !st24.bad}>{st24 ? st24.text : "—"}</span
-                  >
-                </div>
-              {/if}
               <div class="bv-row">
                 <span class="bv-label">~7d quote Σ</span>
                 <span class="bv-value">{fmtUsdt(lv.qv7)} USDT</span>
