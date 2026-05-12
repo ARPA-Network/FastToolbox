@@ -3,7 +3,8 @@
 
   const TARGETS = ["ARPAUSDT", "BELUSDT"] as const;
   const AUTO_REFRESH_MINUTES = 30;
-  const WEEKLY_REFRESH_MINUTES = 60;
+  /** Browser auto-refresh for weekly/monthly fetch. Not read from server `.env`; see `VOL_MONITOR_FULL_MARKET_TTL_SEC` (Python full-market cache TTL) for a different knob. */
+  const WEEKLY_REFRESH_MINUTES = 720;
   const EXCHANGE_INFO_URL = "https://api.binance.com/api/v3/exchangeInfo";
   const TICKER_24HR_URL = "https://api.binance.com/api/v3/ticker/24hr";
   const KLINES_INTERVAL_MS = 200;
@@ -28,6 +29,10 @@
     qv30: number | null;
     longSrc: string;
     longErr: string | null;
+    /** Spot-universe 24h rank from rank snapshot (same `universe_total` as server); not from browser ticker. */
+    rank24?: number;
+    total24?: number;
+    pct24?: number;
     rank7?: number;
     total7?: number;
     pct7?: number;
@@ -57,6 +62,10 @@
   };
 
   type RankSnapTarget = {
+    rank_24h?: number;
+    total_24h?: number;
+    percentile_24h?: number;
+    qv_24h?: number;
     qv_7d?: number;
     qv_30d?: number;
     rank_7d?: number;
@@ -69,6 +78,8 @@
 
   type RankSnap = {
     full_market_cache_updated_at?: number;
+    /** Present when snapshot was built with `mode: "light"` (no full-market 7d/30d ranks). */
+    mode?: string;
     targets?: Record<string, RankSnapTarget>;
   };
 
@@ -255,6 +266,13 @@
     return d.toLocaleString("en-US", { timeZone: "Asia/Shanghai" });
   }
 
+  function rankPctDashMsg(snap: RankSnap | null): string {
+    if (snap?.mode === "light") {
+      return "— (light snapshot: rolling Σ only; run POST /api/vol-snapshot/refresh with {\"mode\":\"full\"} for 7d/30d ranks)";
+    }
+    return "— (rank snapshot required: ?rankSnapshot= / localStorage / default URL)";
+  }
+
   async function load24hData() {
     const [tickerRes, infoRes] = await Promise.all([
       fetch(TICKER_24HR_URL, { signal: AbortSignal.timeout(20000) }),
@@ -308,6 +326,19 @@
           rank30: tSnap.rank_30d,
           total30: tSnap.total_30d,
           pct30: tSnap.percentile_30d,
+          rank24:
+            tSnap.rank_24h != null && tSnap.total_24h != null
+              ? tSnap.rank_24h
+              : undefined,
+          total24:
+            tSnap.rank_24h != null && tSnap.total_24h != null
+              ? tSnap.total_24h
+              : undefined,
+          pct24:
+            tSnap.percentile_24h != null &&
+            !Number.isNaN(Number(tSnap.percentile_24h))
+              ? Number(tSnap.percentile_24h)
+              : undefined,
           longSrc: st
             ? `Rank snapshot (full market ${st})`
             : "Rank snapshot",
@@ -348,7 +379,9 @@
     const rankSnap = stateWeekly?.rankSnap ?? null;
     const url = getRankSnapshotUrl();
     const snapHint = rankSnap
-      ? ` Full-market rank snapshot loaded (full-market data time ${snapshotTimeText(rankSnap) || "—"}).`
+      ? rankSnap.mode === "light"
+        ? ` Light rank snapshot loaded (7d/30d quote Σ only; no full-market ranks — use full refresh on server). Snapshot time ${snapshotTimeText(rankSnap) || "—"}.`
+        : ` Full-market rank snapshot loaded (full-market data time ${snapshotTimeText(rankSnap) || "—"}).`
       : url
         ? " Rank snapshot URL is set but failed to load; 7d/30d shows target quote volume only (no full-market ranks)."
         : " No rank snapshot URL (?rankSnapshot= / localStorage / default). Full-market ranks require the Python snapshot service.";
@@ -609,6 +642,13 @@
                 <span class="bv-value bv-status-warn">Failed: {lv.longErr}</span>
               </div>
             {:else}
+              {@const has24Snap =
+                lv.rank24 != null && lv.total24 != null}
+              {@const pct24Num =
+                lv.pct24 != null && !Number.isNaN(Number(lv.pct24))
+                  ? Number(lv.pct24)
+                  : null}
+              {@const st24 = pct24Num != null ? bottom20Status(pct24Num) : null}
               {@const pct7Num =
                 lv.pct7 != null && !Number.isNaN(Number(lv.pct7))
                   ? Number(lv.pct7)
@@ -623,8 +663,27 @@
                 lv.rank7 != null && lv.total7 != null}
               {@const has30Rank =
                 lv.rank30 != null && lv.total30 != null}
-              {@const rankPctDash =
-                "— (rank snapshot required: ?rankSnapshot= / localStorage / default URL)"}
+              {@const rankPctDash = rankPctDashMsg(stateWeekly?.rankSnap ?? null)}
+              {#if has24Snap}
+                <div class="bv-row">
+                  <span class="bv-label">24h rank (snapshot universe)</span>
+                  <span class="bv-value">{lv.rank24} / {lv.total24}</span>
+                </div>
+                <div class="bv-row">
+                  <span class="bv-label">24h percentile (snapshot)</span>
+                  <span class="bv-value"
+                    >{pct24Num != null ? fmtPct(pct24Num) : "—"}</span
+                  >
+                </div>
+                <div class="bv-row">
+                  <span class="bv-label">24h bottom 20% (snapshot)</span>
+                  <span
+                    class="bv-value"
+                    class:bv-status-warn={st24?.bad}
+                    class:bv-status-ok={st24 && !st24.bad}>{st24 ? st24.text : "—"}</span
+                  >
+                </div>
+              {/if}
               <div class="bv-row">
                 <span class="bv-label">~7d quote Σ</span>
                 <span class="bv-value">{fmtUsdt(lv.qv7)} USDT</span>
