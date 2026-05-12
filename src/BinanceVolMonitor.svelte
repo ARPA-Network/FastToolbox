@@ -645,7 +645,11 @@
 </script>
 
 <section class="bv-wrap" aria-labelledby="bv-heading">
-  <h2 id="bv-heading">Binance USDT volume ranks</h2>
+  <div class="bv-hero">
+    <p class="bv-eyebrow">Market structure</p>
+    <h2 id="bv-heading">Binance USDT volume ranks</h2>
+    <p class="bv-tagline">24h ticker · rolling 7d/30d Σ · snapshot percentiles</p>
+  </div>
   <p class="bv-note">{sampleNote || "—"}</p>
   <div class="bv-meta-block">
     <span class="bv-meta-line">{updateLine24h}</span>
@@ -892,112 +896,189 @@
 <style>
   .bv-wrap {
     width: 100%;
-    max-width: 960px;
-    margin: 2.5rem auto 0;
-    padding: 1.25rem 1rem 2rem;
-    border-top: 1px solid #ddd;
+    max-width: 1080px;
+    margin: 2rem auto 2.75rem;
+    padding: 2rem 1.5rem 2.25rem;
     box-sizing: border-box;
+    border-radius: 20px;
+    border: 1px solid var(--ft-line-strong, rgba(255, 255, 255, 0.12));
+    background: linear-gradient(
+      155deg,
+      rgba(26, 30, 38, 0.88) 0%,
+      rgba(14, 16, 20, 0.94) 55%,
+      rgba(12, 14, 18, 0.98) 100%
+    );
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.03) inset,
+      0 28px 60px rgba(0, 0, 0, 0.42),
+      0 0 80px -30px var(--ft-accent-glow, rgba(201, 169, 98, 0.2));
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bv-wrap::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(201, 169, 98, 0.45),
+      transparent
+    );
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .bv-hero {
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+
+  .bv-eyebrow {
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--ft-accent, #c9a962);
+    margin: 0 0 0.4rem;
   }
 
   .bv-wrap h2 {
-    font-size: 1.25rem;
+    font-family: var(--ft-font-display, "Cormorant", Georgia, serif);
+    font-size: clamp(1.65rem, 3.5vw, 2.15rem);
     font-weight: 600;
-    color: #222;
-    margin: 0 0 0.5rem;
-    text-align: center;
+    letter-spacing: 0.04em;
+    color: var(--ft-text, #e9e6e1);
+    margin: 0 0 0.35rem;
+    line-height: 1.15;
+  }
+
+  .bv-tagline {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 300;
+    color: var(--ft-text-soft, #a39e96);
+    letter-spacing: 0.06em;
   }
 
   .bv-note {
-    font-size: 0.82rem;
-    color: #666;
-    line-height: 1.45;
+    font-size: 0.78rem;
+    color: var(--ft-muted, #6d6860);
+    line-height: 1.55;
     text-align: center;
-    margin: 0 auto 0.5rem;
-    max-width: 40rem;
+    margin: 0 auto 1rem;
+    max-width: 44rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: var(--ft-radius-sm, 10px);
+    background: rgba(0, 0, 0, 0.22);
+    border: 1px solid var(--ft-line, rgba(255, 255, 255, 0.06));
   }
 
   .bv-meta-block {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    margin-bottom: 0.75rem;
+    gap: 0.35rem;
+    margin-bottom: 1rem;
   }
 
   .bv-meta-line {
-    font-size: 0.85rem;
-    color: #888;
+    font-size: 0.78rem;
+    color: var(--ft-text-soft, #a39e96);
     text-align: center;
     line-height: 1.45;
+    font-variant-numeric: tabular-nums;
   }
 
   .bv-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem 0.75rem;
+    gap: 0.65rem 0.85rem;
     justify-content: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.65rem;
   }
 
   .bv-refresh {
-    padding: 0.45em 1.1em;
-    background: #2d6a4f;
-    color: #fff;
-    border: 1px solid #1b4332;
-    border-radius: 6px;
+    padding: 0.62rem 1.35rem;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
     cursor: pointer;
-    font-size: 0.92rem;
+    border: 1px solid rgba(74, 124, 98, 0.55);
+    background: linear-gradient(165deg, #2f5d47 0%, #1e3d2e 100%);
+    color: #f4faf6;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.18s ease,
+      border-color 0.18s ease;
   }
 
   .bv-refresh-secondary {
-    background: #1d4ed8;
-    border-color: #1e40af;
+    border-color: rgba(100, 130, 180, 0.45);
+    background: linear-gradient(165deg, #2c3f5c 0%, #1a2740 100%);
+    color: #e8eef8;
   }
 
   .bv-refresh-secondary:hover:not(:disabled) {
-    background: #2563eb;
+    border-color: rgba(140, 170, 220, 0.55);
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
   }
 
   .bv-refresh:hover:not(:disabled) {
-    background: #40916c;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45);
   }
 
   .bv-refresh:disabled {
-    opacity: 0.65;
+    opacity: 0.45;
     cursor: not-allowed;
+    transform: none;
   }
 
   .bv-countdown-block {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.2rem;
-    margin-bottom: 1.25rem;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 0.25rem;
   }
 
   .bv-countdown-line {
-    font-size: 0.82rem;
-    color: #888;
+    font-size: 0.72rem;
+    color: var(--ft-muted, #6d6860);
     text-align: center;
     line-height: 1.45;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
   }
 
   .bv-loading {
     text-align: center;
-    color: #666;
-    padding: 2rem 0;
+    color: var(--ft-text-soft, #a39e96);
+    padding: 2.5rem 0;
+    font-size: 0.9rem;
+    font-weight: 300;
+    letter-spacing: 0.08em;
   }
 
   .bv-spinner {
     display: inline-block;
-    width: 18px;
-    height: 18px;
-    border: 3px solid #ccc;
-    border-top-color: #2d6a4f;
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    border-top-color: var(--ft-accent, #c9a962);
     border-radius: 50%;
-    animation: bv-spin 0.7s linear infinite;
+    animation: bv-spin 0.75s linear infinite;
     vertical-align: middle;
-    margin-right: 8px;
+    margin-right: 10px;
   }
 
   @keyframes bv-spin {
@@ -1009,56 +1090,112 @@
   .bv-cards {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.25rem;
+    gap: 1.35rem;
     justify-content: center;
+    align-items: stretch;
   }
 
   .bv-card {
-    background: #fafafa;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 1.1rem 1.25rem;
-    min-width: 240px;
+    background: linear-gradient(
+      165deg,
+      var(--ft-paper, #ebe6dc) 0%,
+      var(--ft-paper2, #e2dcd2) 100%
+    );
+    border: none;
+    border-radius: 16px;
+    padding: 1.35rem 1.4rem 1.25rem;
+    min-width: 260px;
     flex: 1;
-    max-width: 400px;
+    max-width: 420px;
     box-sizing: border-box;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 14px 32px rgba(0, 0, 0, 0.28);
+    color: #14161a;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .bv-card:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 22px 44px rgba(0, 0, 0, 0.32);
   }
 
   .bv-card.bv-ok {
-    border-color: #95d5b2;
-    background: #f0fdf4;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.65) inset,
+      0 0 0 1px rgba(45, 106, 79, 0.25),
+      0 14px 32px rgba(0, 0, 0, 0.22);
+  }
+
+  .bv-card.bv-ok::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12%;
+    bottom: 12%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, #40916c, #2d6a4f);
+    opacity: 0.85;
   }
 
   .bv-card.bv-warn {
-    border-color: #e9c46a;
-    background: #fffbeb;
+    box-shadow:
+      0 1px 0 rgba(255, 255, 255, 0.55) inset,
+      0 0 0 1px rgba(180, 130, 40, 0.35),
+      0 14px 32px rgba(0, 0, 0, 0.22);
+  }
+
+  .bv-card.bv-warn::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 12%;
+    bottom: 12%;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, #d4a017, #a16207);
+    opacity: 0.9;
   }
 
   .bv-card.bv-error {
-    border-color: #e07a7a;
-    background: #fff5f5;
-    color: #8b1538;
+    background: linear-gradient(165deg, #2a1818 0%, #1a1012 100%);
+    color: #f5e0e4;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+  }
+
+  .bv-card.bv-error:hover {
+    transform: none;
   }
 
   .bv-symbol {
-    font-size: 1.1rem;
+    font-family: var(--ft-font-ui, "Sora", sans-serif);
+    font-size: 1.05rem;
     font-weight: 600;
-    margin-bottom: 0.75rem;
-    letter-spacing: 0.02em;
-    color: #222;
+    margin-bottom: 0.85rem;
+    letter-spacing: 0.06em;
+    color: #0f1114;
   }
 
-  .bv-error .bv-symbol {
-    color: #8b1538;
+  .bv-card.bv-error .bv-symbol {
+    color: #fecaca;
   }
 
   .bv-row {
     display: flex;
     justify-content: space-between;
+    align-items: baseline;
     gap: 0.75rem;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid #e8e8e8;
-    font-size: 0.92rem;
+    padding: 0.42rem 0;
+    border-bottom: 1px solid rgba(20, 22, 26, 0.08);
+    font-size: 0.86rem;
+  }
+
+  .bv-card.bv-error .bv-row {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
   }
 
   .bv-row:last-of-type {
@@ -1066,18 +1203,30 @@
   }
 
   .bv-label {
-    color: #666;
+    color: rgba(20, 22, 26, 0.55);
     flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+
+  .bv-card.bv-error .bv-label {
+    color: rgba(255, 255, 255, 0.55);
   }
 
   .bv-value {
-    color: #222;
-    font-weight: 500;
+    color: #12151c;
+    font-weight: 600;
     text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bv-card.bv-error .bv-value {
+    color: #fde8ec;
   }
 
   .bv-status-warn {
-    color: #b45309;
+    color: #9a3412;
     font-weight: 600;
   }
 
@@ -1087,20 +1236,23 @@
   }
 
   .bv-section {
-    margin-top: 0.85rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #e0e0e0;
-    font-size: 0.78rem;
-    color: #777;
-    letter-spacing: 0.02em;
+    margin-top: 1rem;
+    padding-top: 0.55rem;
+    border-top: 1px solid rgba(20, 22, 26, 0.1);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(20, 22, 26, 0.45);
   }
 
   .bv-footnote {
-    margin: 0.85rem 0 0;
-    padding-top: 0.65rem;
-    border-top: 1px solid #e8e8e8;
-    font-size: 0.75rem;
-    color: #888;
-    line-height: 1.4;
+    margin: 1rem 0 0;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(20, 22, 26, 0.08);
+    font-size: 0.7rem;
+    color: rgba(20, 22, 26, 0.5);
+    line-height: 1.45;
+    font-weight: 400;
   }
 </style>

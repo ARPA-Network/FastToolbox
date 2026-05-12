@@ -1,63 +1,160 @@
-html, body {
-	position: relative;
-	width: 100%;
-	height: 100%;
+/* FastToolbox — global design tokens & base */
+:root {
+  --ft-bg0: #08090c;
+  --ft-bg1: #101218;
+  --ft-surface: #161922;
+  --ft-surface2: #1c2029;
+  --ft-paper: #ebe6dc;
+  --ft-paper2: #e2dcd2;
+  --ft-text: #e9e6e1;
+  --ft-text-soft: #a39e96;
+  --ft-muted: #6d6860;
+  --ft-accent: #c9a962;
+  --ft-accent-glow: rgba(201, 169, 98, 0.35);
+  --ft-line: rgba(255, 255, 255, 0.06);
+  --ft-line-strong: rgba(255, 255, 255, 0.12);
+  --ft-radius: 14px;
+  --ft-radius-sm: 10px;
+  --ft-font-display: "Cormorant", "Times New Roman", serif;
+  --ft-font-ui: "Sora", system-ui, sans-serif;
+  --ft-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+}
+
+html,
+body {
+  position: relative;
+  width: 100%;
+  margin: 0;
 }
 
 body {
-	color: #333;
-	margin: 0;
-	padding: 8px;
-	box-sizing: border-box;
-	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+  min-height: 100%;
+  color: var(--ft-text);
+  font-family: var(--ft-font-ui);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+  background-color: var(--ft-bg0);
+  background-image:
+    radial-gradient(ellipse 120% 80% at 50% -30%, rgba(201, 169, 98, 0.09), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 0%, rgba(88, 122, 158, 0.06), transparent 45%),
+    linear-gradient(180deg, var(--ft-bg1) 0%, var(--ft-bg0) 38%, #060708 100%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
-	color: rgb(0,100,200);
-	text-decoration: none;
+  color: var(--ft-accent);
+  text-decoration: none;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
 a:hover {
-	text-decoration: underline;
+  color: #dcc48a;
+  text-decoration: underline;
 }
 
 a:visited {
-	color: rgb(0,80,160);
+  color: #a88b4a;
 }
 
 label {
-	display: block;
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ft-text-soft);
+  margin-bottom: 0.35rem;
 }
 
-input, button, select, textarea {
-	font-family: inherit;
-	font-size: inherit;
-	-webkit-padding: 0.4em 0;
-	padding: 0.4em;
-	margin: 0 0 0.5em 0;
-	box-sizing: border-box;
-	border: 1px solid #ccc;
-	border-radius: 2px;
+input,
+button,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 0.95rem;
+  padding: 0.55rem 0.75rem;
+  margin: 0 0 0.85rem 0;
+  border: 1px solid var(--ft-line-strong);
+  border-radius: var(--ft-radius-sm);
+  background: rgba(0, 0, 0, 0.25);
+  color: var(--ft-text);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+input::placeholder {
+  color: var(--ft-muted);
+}
+
+input:hover,
+textarea:hover,
+select:hover {
+  border-color: rgba(201, 169, 98, 0.35);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--ft-accent);
+  box-shadow: 0 0 0 3px var(--ft-accent-glow);
 }
 
 input:disabled {
-	color: #ccc;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 button {
-	color: #333;
-	background-color: #f4f4f4;
-	outline: none;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  padding: 0.65rem 1.15rem;
+  margin: 0 0 0.75rem 0;
+  border: 1px solid var(--ft-line-strong);
+  border-radius: 999px;
+  background: linear-gradient(165deg, var(--ft-surface2) 0%, var(--ft-surface) 100%);
+  color: var(--ft-text);
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 0.12s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: rgba(201, 169, 98, 0.45);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 24px var(--ft-accent-glow);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.98);
 }
 
 button:disabled {
-	color: #999;
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
-button:not(:disabled):active {
-	background-color: #ddd;
-}
-
-button:focus {
-	border-color: #666;
+button:focus-visible {
+  outline: 2px solid var(--ft-accent);
+  outline-offset: 2px;
 }
