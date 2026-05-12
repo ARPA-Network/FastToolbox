@@ -52,6 +52,24 @@
     pct30?: number;
   };
 
+  type Bottom20 = { bad: boolean; text: string };
+
+  /** Precomputed in `buildRows` so the `{#each}` branch needs no `{@const}` (avoids fragile nested-const + each rendering). */
+  type VolCardDisp = {
+    has24Snap: boolean;
+    pct24Num: number | null;
+    st24: Bottom20 | null;
+    pct7Num: number | null;
+    pct30Num: number | null;
+    st7: Bottom20 | null;
+    st30: Bottom20 | null;
+    has7Rank: boolean;
+    has30Rank: boolean;
+    rankPctDash: string;
+    spotSt: Bottom20 | null;
+    allSt: Bottom20 | null;
+  };
+
   type VolCard = {
     symbol: string;
     volume: string;
@@ -59,6 +77,7 @@
     all: RankInfo | null;
     cardWarn: boolean;
     longVol: LongVol;
+    disp: VolCardDisp;
   };
 
   type VolCardRow =
@@ -111,7 +130,7 @@
   let refreshWeeklyBusy = false;
   let errorTitle: string | null = null;
   let errorMsg: string | null = null;
-  let rows: VolCardRow[] = [];
+  let pairRows: VolCardRow[] = [];
 
   let countdownTimer: ReturnType<typeof setInterval> | null = null;
   let timer24h: ReturnType<typeof setTimeout> | null = null;
@@ -387,6 +406,38 @@
     };
   }
 
+  function buildVolCardDisp(
+    lv: LongVol,
+    rankSnap: RankSnap | null
+  ): VolCardDisp {
+    const pct24Num =
+      lv.pct24 != null && !Number.isNaN(Number(lv.pct24))
+        ? Number(lv.pct24)
+        : null;
+    const pct7Num =
+      lv.pct7 != null && !Number.isNaN(Number(lv.pct7))
+        ? Number(lv.pct7)
+        : null;
+    const pct30Num =
+      lv.pct30 != null && !Number.isNaN(Number(lv.pct30))
+        ? Number(lv.pct30)
+        : null;
+    return {
+      has24Snap: lv.rank24 != null && lv.total24 != null,
+      pct24Num,
+      st24: pct24Num != null ? bottom20Status(pct24Num) : null,
+      pct7Num,
+      pct30Num,
+      st7: pct7Num != null ? bottom20Status(pct7Num) : null,
+      st30: pct30Num != null ? bottom20Status(pct30Num) : null,
+      has7Rank: lv.rank7 != null && lv.total7 != null,
+      has30Rank: lv.rank30 != null && lv.total30 != null,
+      rankPctDash: rankPctDashMsg(rankSnap),
+      spotSt: null,
+      allSt: null,
+    };
+  }
+
   function computeSampleNote(): string {
     if (!state24h) return "";
     const { spotUsdt, allUsdt } = state24h;
@@ -451,6 +502,10 @@
         longErr: null,
       };
 
+      const disp = buildVolCardDisp(longVol, stateWeekly?.rankSnap ?? null);
+      disp.spotSt = spotStats ? bottom20Status(spotStats.percentile) : null;
+      disp.allSt = allStats ? bottom20Status(allStats.percentile) : null;
+
       out.push({
         kind: "card",
         item: {
@@ -460,13 +515,18 @@
           all: allStats,
           cardWarn,
           longVol,
+          disp,
         },
       });
     }
     return out;
   }
 
-  $: rows = buildRows();
+  $: {
+    state24h;
+    stateWeekly;
+    pairRows = buildRows();
+  }
   $: updateLine24h = formatUpdateLine("24h data", state24h?.updatedAt);
   $: updateLineWeekly = formatUpdateLine(
     "Weekly / monthly data",
@@ -629,7 +689,7 @@
     </div>
   {:else}
     <div class="bv-cards">
-      {#each rows as row}
+      {#each pairRows as row}
         {#if row.kind === "missing"}
           <div class="bv-card bv-error">
             <div class="bv-symbol">🪙 {row.symbol}</div>
@@ -639,155 +699,146 @@
             </div>
           </div>
         {:else}
-          {@const item = row.item}
-          {@const lv = item.longVol}
           <div
             class="bv-card"
-            class:bv-warn={item.cardWarn}
-            class:bv-ok={!item.cardWarn}
+            class:bv-warn={row.item.cardWarn}
+            class:bv-ok={!row.item.cardWarn}
           >
-            <div class="bv-symbol">🪙 {item.symbol}</div>
+            <div class="bv-symbol">🪙 {row.item.symbol}</div>
             <div class="bv-row">
               <span class="bv-label">24h quote volume</span>
-              <span class="bv-value">{item.volume} USDT</span>
+              <span class="bv-value">{row.item.volume} USDT</span>
             </div>
 
-            {#if !lv.longErr}
-              {@const has24Snap =
-                lv.rank24 != null && lv.total24 != null}
-              {@const pct24Num =
-                lv.pct24 != null && !Number.isNaN(Number(lv.pct24))
-                  ? Number(lv.pct24)
-                  : null}
-              {@const st24 = pct24Num != null ? bottom20Status(pct24Num) : null}
-              {#if has24Snap}
+            {#if !row.item.longVol.longErr}
+              {#if row.item.disp.has24Snap}
                 <div class="bv-section">24h snapshot (spot USDT universe, server)</div>
                 <div class="bv-row">
                   <span class="bv-label">Rank</span>
-                  <span class="bv-value">{lv.rank24} / {lv.total24}</span>
+                  <span class="bv-value"
+                    >{row.item.longVol.rank24} / {row.item.longVol.total24}</span
+                  >
                 </div>
                 <div class="bv-row">
                   <span class="bv-label">Percentile</span>
                   <span class="bv-value"
-                    >{pct24Num != null ? fmtPct(pct24Num) : "—"}</span
+                    >{row.item.disp.pct24Num != null
+                      ? fmtPct(row.item.disp.pct24Num)
+                      : "—"}</span
                   >
                 </div>
                 <div class="bv-row">
                   <span class="bv-label">Bottom 20%</span>
                   <span
                     class="bv-value"
-                    class:bv-status-warn={st24?.bad}
-                    class:bv-status-ok={st24 && !st24.bad}>{st24 ? st24.text : "—"}</span
+                    class:bv-status-warn={row.item.disp.st24?.bad}
+                    class:bv-status-ok={row.item.disp.st24 && !row.item.disp.st24.bad}
+                    >{row.item.disp.st24 ? row.item.disp.st24.text : "—"}</span
                   >
                 </div>
               {/if}
             {/if}
 
             <div class="bv-section">Weekly / monthly (rolling daily-K quote volume)</div>
-            {#if lv.longErr}
+            {#if row.item.longVol.longErr}
               <div class="bv-row">
                 <span class="bv-label">K-lines request</span>
-                <span class="bv-value bv-status-warn">Failed: {lv.longErr}</span>
+                <span class="bv-value bv-status-warn"
+                  >Failed: {row.item.longVol.longErr}</span
+                >
               </div>
             {:else}
-              {@const pct7Num =
-                lv.pct7 != null && !Number.isNaN(Number(lv.pct7))
-                  ? Number(lv.pct7)
-                  : null}
-              {@const pct30Num =
-                lv.pct30 != null && !Number.isNaN(Number(lv.pct30))
-                  ? Number(lv.pct30)
-                  : null}
-              {@const st7 = pct7Num != null ? bottom20Status(pct7Num) : null}
-              {@const st30 = pct30Num != null ? bottom20Status(pct30Num) : null}
-              {@const has7Rank =
-                lv.rank7 != null && lv.total7 != null}
-              {@const has30Rank =
-                lv.rank30 != null && lv.total30 != null}
-              {@const rankPctDash = rankPctDashMsg(stateWeekly?.rankSnap ?? null)}
               <div class="bv-row">
                 <span class="bv-label">~7d quote Σ</span>
-                <span class="bv-value">{fmtUsdt(lv.qv7)} USDT</span>
+                <span class="bv-value"
+                  >{fmtUsdt(row.item.longVol.qv7)} USDT</span
+                >
               </div>
               <div class="bv-row">
                 <span class="bv-label">7d full-market rank</span>
                 <span class="bv-value"
-                  >{has7Rank ? `${lv.rank7} / ${lv.total7}` : rankPctDash}</span
+                  >{row.item.disp.has7Rank
+                    ? `${row.item.longVol.rank7} / ${row.item.longVol.total7}`
+                    : row.item.disp.rankPctDash}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">7d full-market percentile</span>
                 <span class="bv-value"
-                  >{pct7Num != null
-                    ? fmtPct(pct7Num)
-                    : has7Rank
+                  >{row.item.disp.pct7Num != null
+                    ? fmtPct(row.item.disp.pct7Num)
+                    : row.item.disp.has7Rank
                       ? "—"
-                      : rankPctDash}</span
+                      : row.item.disp.rankPctDash}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">7d bottom 20%</span>
                 <span
                   class="bv-value"
-                  class:bv-status-warn={st7?.bad}
-                  class:bv-status-ok={st7 && !st7.bad}>{st7 ? st7.text : "—"}</span
+                  class:bv-status-warn={row.item.disp.st7?.bad}
+                  class:bv-status-ok={row.item.disp.st7 && !row.item.disp.st7.bad}
+                  >{row.item.disp.st7 ? row.item.disp.st7.text : "—"}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">~30d quote Σ</span>
-                <span class="bv-value">{fmtUsdt(lv.qv30)} USDT</span>
+                <span class="bv-value"
+                  >{fmtUsdt(row.item.longVol.qv30)} USDT</span
+                >
               </div>
               <div class="bv-row">
                 <span class="bv-label">30d full-market rank</span>
                 <span class="bv-value"
-                  >{has30Rank
-                    ? `${lv.rank30} / ${lv.total30}`
-                    : rankPctDash}</span
+                  >{row.item.disp.has30Rank
+                    ? `${row.item.longVol.rank30} / ${row.item.longVol.total30}`
+                    : row.item.disp.rankPctDash}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">30d full-market percentile</span>
                 <span class="bv-value"
-                  >{pct30Num != null
-                    ? fmtPct(pct30Num)
-                    : has30Rank
+                  >{row.item.disp.pct30Num != null
+                    ? fmtPct(row.item.disp.pct30Num)
+                    : row.item.disp.has30Rank
                       ? "—"
-                      : rankPctDash}</span
+                      : row.item.disp.rankPctDash}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">30d bottom 20%</span>
                 <span
                   class="bv-value"
-                  class:bv-status-warn={st30?.bad}
-                  class:bv-status-ok={st30 && !st30.bad}>{st30 ? st30.text : "—"}</span
+                  class:bv-status-warn={row.item.disp.st30?.bad}
+                  class:bv-status-ok={row.item.disp.st30 && !row.item.disp.st30.bad}
+                  >{row.item.disp.st30 ? row.item.disp.st30.text : "—"}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">Data source</span>
-                <span class="bv-value">{lv.longSrc || "—"}</span>
+                <span class="bv-value">{row.item.longVol.longSrc || "—"}</span>
               </div>
             {/if}
 
             <div class="bv-section">Spot USDT (exchangeInfo, Binance-aligned)</div>
-            {#if item.spot}
-              {@const st = bottom20Status(item.spot.percentile)}
+            {#if row.item.spot}
               <div class="bv-row">
                 <span class="bv-label">Rank</span>
                 <span class="bv-value"
-                  >{item.spot.rank} / {item.spot.total}</span
+                  >{row.item.spot.rank} / {row.item.spot.total}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">Percentile</span>
-                <span class="bv-value">{fmtPct(item.spot.percentile)}</span>
+                <span class="bv-value">{fmtPct(row.item.spot.percentile)}</span>
               </div>
               <div class="bv-row">
                 <span class="bv-label">Bottom 20%</span>
                 <span
                   class="bv-value"
-                  class:bv-status-warn={st.bad}
-                  class:bv-status-ok={!st.bad}>{st.text}</span
+                  class:bv-status-warn={row.item.disp.spotSt?.bad}
+                  class:bv-status-ok={row.item.disp.spotSt && !row.item.disp.spotSt.bad}
+                  >{row.item.disp.spotSt ? row.item.disp.spotSt.text : "—"}</span
                 >
               </div>
             {:else}
@@ -798,24 +849,24 @@
             {/if}
 
             <div class="bv-section">All *USDT tickers (coarse filter)</div>
-            {#if item.all}
-              {@const st2 = bottom20Status(item.all.percentile)}
+            {#if row.item.all}
               <div class="bv-row">
                 <span class="bv-label">Rank</span>
                 <span class="bv-value"
-                  >{item.all.rank} / {item.all.total}</span
+                  >{row.item.all.rank} / {row.item.all.total}</span
                 >
               </div>
               <div class="bv-row">
                 <span class="bv-label">Percentile</span>
-                <span class="bv-value">{fmtPct(item.all.percentile)}</span>
+                <span class="bv-value">{fmtPct(row.item.all.percentile)}</span>
               </div>
               <div class="bv-row">
                 <span class="bv-label">Bottom 20%</span>
                 <span
                   class="bv-value"
-                  class:bv-status-warn={st2.bad}
-                  class:bv-status-ok={!st2.bad}>{st2.text}</span
+                  class:bv-status-warn={row.item.disp.allSt?.bad}
+                  class:bv-status-ok={row.item.disp.allSt && !row.item.disp.allSt.bad}
+                  >{row.item.disp.allSt ? row.item.disp.allSt.text : "—"}</span
                 >
               </div>
             {:else}

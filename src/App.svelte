@@ -96,6 +96,10 @@
 </svelte:head>
 
 <h1>FastToolbox</h1>
+
+<!-- Volume monitor talks to Binance from the browser; keep it high on the page so deploy checks are obvious without scrolling. -->
+<BinanceVolMonitor />
+
 <main>
   <div>
     <h2>Decimal to Binary and Hexadecimal</h2>
@@ -158,8 +162,6 @@
     price: {belHistoricalPrice === undefined ? "..." : belHistoricalPrice} USD
   </div>
 </main>
-
-<BinanceVolMonitor />
 
 <style>
   h1 {
