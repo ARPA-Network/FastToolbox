@@ -1,4 +1,15 @@
 {
   "buildCommand": "npm run build",
-  "outputDirectory": "public"
+  "outputDirectory": "public",
+  "crons": [
+    {
+      "path": "/api/vol-snapshot-cron-refresh",
+      "schedule": "0 */12 * * *"
+    }
+  ],
+  "functions": {
+    "api/vol-snapshot-cron-refresh.js": {
+      "maxDuration": 300
+    }
+  }
 }

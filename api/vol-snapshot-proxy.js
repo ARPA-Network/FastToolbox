@@ -4,6 +4,8 @@
  * Environment:
  *   VOL_SNAPSHOT_UPSTREAM_URL — full Python API URL, e.g. https://api.example.com/api/vol-snapshot
  *   VOL_SNAPSHOT_PROXY_TOKEN — must match VOL_MONITOR_READ_SECRET on the Python service
+ *
+ * Scheduled disk refresh (server): see `/api/vol-snapshot-cron-refresh` + `vercel.json` crons.
  */
 export default async function handler(req, res) {
   if (req.method !== "GET") {
