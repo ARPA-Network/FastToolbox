@@ -109,9 +109,6 @@
   <header class="ft-header">
     <p class="ft-eyebrow">Utilities · markets</p>
     <h1 class="ft-title">FastToolbox</h1>
-    <p class="ft-sub">
-      Pick a tab below — each tool stays mounted so inputs and timers are preserved when you switch.
-    </p>
   </header>
 
   <div class="ft-tabs-wrap">
@@ -327,15 +324,6 @@
     margin: 0;
     color: var(--ft-text);
     text-shadow: 0 2px 40px rgba(0, 0, 0, 0.35);
-  }
-
-  .ft-sub {
-    max-width: 32rem;
-    margin: 1rem auto 0;
-    font-size: 0.95rem;
-    font-weight: 300;
-    color: var(--ft-text-soft);
-    line-height: 1.6;
   }
 
   .ft-tabs-wrap {

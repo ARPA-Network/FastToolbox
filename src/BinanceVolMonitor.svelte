@@ -40,10 +40,6 @@
     qv30: number | null;
     longSrc: string;
     longErr: string | null;
-    /** Spot-universe 24h rank from rank snapshot (same `universe_total` as server); not from browser ticker. */
-    rank24?: number;
-    total24?: number;
-    pct24?: number;
     rank7?: number;
     total7?: number;
     pct7?: number;
@@ -56,9 +52,6 @@
 
   /** Precomputed in `buildRows` so the `{#each}` branch needs no `{@const}` (avoids fragile nested-const + each rendering). */
   type VolCardDisp = {
-    has24Snap: boolean;
-    pct24Num: number | null;
-    st24: Bottom20 | null;
     pct7Num: number | null;
     pct30Num: number | null;
     st7: Bottom20 | null;
@@ -359,19 +352,6 @@
           rank30: tSnap.rank_30d,
           total30: tSnap.total_30d,
           pct30: tSnap.percentile_30d,
-          rank24:
-            tSnap.rank_24h != null && tSnap.total_24h != null
-              ? tSnap.rank_24h
-              : undefined,
-          total24:
-            tSnap.rank_24h != null && tSnap.total_24h != null
-              ? tSnap.total_24h
-              : undefined,
-          pct24:
-            tSnap.percentile_24h != null &&
-            !Number.isNaN(Number(tSnap.percentile_24h))
-              ? Number(tSnap.percentile_24h)
-              : undefined,
           longSrc: st
             ? `Rank snapshot (full market ${st})`
             : "Rank snapshot",
@@ -410,10 +390,6 @@
     lv: LongVol,
     rankSnap: RankSnap | null
   ): VolCardDisp {
-    const pct24Num =
-      lv.pct24 != null && !Number.isNaN(Number(lv.pct24))
-        ? Number(lv.pct24)
-        : null;
     const pct7Num =
       lv.pct7 != null && !Number.isNaN(Number(lv.pct7))
         ? Number(lv.pct7)
@@ -423,9 +399,6 @@
         ? Number(lv.pct30)
         : null;
     return {
-      has24Snap: lv.rank24 != null && lv.total24 != null,
-      pct24Num,
-      st24: pct24Num != null ? bottom20Status(pct24Num) : null,
       pct7Num,
       pct30Num,
       st7: pct7Num != null ? bottom20Status(pct7Num) : null,
@@ -648,7 +621,7 @@
   <div class="bv-hero">
     <p class="bv-eyebrow">Market structure</p>
     <h2 id="bv-heading">Binance USDT volume ranks</h2>
-    <p class="bv-tagline">24h ticker · rolling 7d/30d Σ · snapshot percentiles</p>
+    <p class="bv-tagline">24h ticker · rolling 7d/30d Σ · rank snapshot (7d/30d)</p>
   </div>
   <p class="bv-note">{sampleNote || "—"}</p>
   <div class="bv-meta-block">
@@ -709,38 +682,67 @@
             class:bv-ok={!row.item.cardWarn}
           >
             <div class="bv-symbol">🪙 {row.item.symbol}</div>
+
+            <div class="bv-section">24h ticker</div>
             <div class="bv-row">
               <span class="bv-label">24h quote volume</span>
               <span class="bv-value">{row.item.volume} USDT</span>
             </div>
 
-            {#if !row.item.longVol.longErr}
-              {#if row.item.disp.has24Snap}
-                <div class="bv-section">24h snapshot (spot USDT universe, server)</div>
-                <div class="bv-row">
-                  <span class="bv-label">Rank</span>
-                  <span class="bv-value"
-                    >{row.item.longVol.rank24} / {row.item.longVol.total24}</span
-                  >
-                </div>
-                <div class="bv-row">
-                  <span class="bv-label">Percentile</span>
-                  <span class="bv-value"
-                    >{row.item.disp.pct24Num != null
-                      ? fmtPct(row.item.disp.pct24Num)
-                      : "—"}</span
-                  >
-                </div>
-                <div class="bv-row">
-                  <span class="bv-label">Bottom 20%</span>
-                  <span
-                    class="bv-value"
-                    class:bv-status-warn={row.item.disp.st24?.bad}
-                    class:bv-status-ok={row.item.disp.st24 && !row.item.disp.st24.bad}
-                    >{row.item.disp.st24 ? row.item.disp.st24.text : "—"}</span
-                  >
-                </div>
-              {/if}
+            <div class="bv-section">Spot USDT (exchangeInfo, Binance-aligned)</div>
+            {#if row.item.spot}
+              <div class="bv-row">
+                <span class="bv-label">Rank</span>
+                <span class="bv-value"
+                  >{row.item.spot.rank} / {row.item.spot.total}</span
+                >
+              </div>
+              <div class="bv-row">
+                <span class="bv-label">Percentile</span>
+                <span class="bv-value">{fmtPct(row.item.spot.percentile)}</span>
+              </div>
+              <div class="bv-row">
+                <span class="bv-label">Bottom 20%</span>
+                <span
+                  class="bv-value"
+                  class:bv-status-warn={row.item.disp.spotSt?.bad}
+                  class:bv-status-ok={row.item.disp.spotSt && !row.item.disp.spotSt.bad}
+                  >{row.item.disp.spotSt ? row.item.disp.spotSt.text : "—"}</span
+                >
+              </div>
+            {:else}
+              <div class="bv-row">
+                <span class="bv-label">Rank / percentile</span>
+                <span class="bv-value">— (not in this universe)</span>
+              </div>
+            {/if}
+
+            <div class="bv-section">All *USDT tickers (coarse filter)</div>
+            {#if row.item.all}
+              <div class="bv-row">
+                <span class="bv-label">Rank</span>
+                <span class="bv-value"
+                  >{row.item.all.rank} / {row.item.all.total}</span
+                >
+              </div>
+              <div class="bv-row">
+                <span class="bv-label">Percentile</span>
+                <span class="bv-value">{fmtPct(row.item.all.percentile)}</span>
+              </div>
+              <div class="bv-row">
+                <span class="bv-label">Bottom 20%</span>
+                <span
+                  class="bv-value"
+                  class:bv-status-warn={row.item.disp.allSt?.bad}
+                  class:bv-status-ok={row.item.disp.allSt && !row.item.disp.allSt.bad}
+                  >{row.item.disp.allSt ? row.item.disp.allSt.text : "—"}</span
+                >
+              </div>
+            {:else}
+              <div class="bv-row">
+                <span class="bv-label">Rank / percentile</span>
+                <span class="bv-value">— (not in this universe)</span>
+              </div>
             {/if}
 
             <div class="bv-section">Weekly / monthly (rolling daily-K quote volume)</div>
@@ -821,62 +823,6 @@
               <div class="bv-row">
                 <span class="bv-label">Data source</span>
                 <span class="bv-value">{row.item.longVol.longSrc || "—"}</span>
-              </div>
-            {/if}
-
-            <div class="bv-section">Spot USDT (exchangeInfo, Binance-aligned)</div>
-            {#if row.item.spot}
-              <div class="bv-row">
-                <span class="bv-label">Rank</span>
-                <span class="bv-value"
-                  >{row.item.spot.rank} / {row.item.spot.total}</span
-                >
-              </div>
-              <div class="bv-row">
-                <span class="bv-label">Percentile</span>
-                <span class="bv-value">{fmtPct(row.item.spot.percentile)}</span>
-              </div>
-              <div class="bv-row">
-                <span class="bv-label">Bottom 20%</span>
-                <span
-                  class="bv-value"
-                  class:bv-status-warn={row.item.disp.spotSt?.bad}
-                  class:bv-status-ok={row.item.disp.spotSt && !row.item.disp.spotSt.bad}
-                  >{row.item.disp.spotSt ? row.item.disp.spotSt.text : "—"}</span
-                >
-              </div>
-            {:else}
-              <div class="bv-row">
-                <span class="bv-label">Rank / percentile</span>
-                <span class="bv-value">— (not in this universe)</span>
-              </div>
-            {/if}
-
-            <div class="bv-section">All *USDT tickers (coarse filter)</div>
-            {#if row.item.all}
-              <div class="bv-row">
-                <span class="bv-label">Rank</span>
-                <span class="bv-value"
-                  >{row.item.all.rank} / {row.item.all.total}</span
-                >
-              </div>
-              <div class="bv-row">
-                <span class="bv-label">Percentile</span>
-                <span class="bv-value">{fmtPct(row.item.all.percentile)}</span>
-              </div>
-              <div class="bv-row">
-                <span class="bv-label">Bottom 20%</span>
-                <span
-                  class="bv-value"
-                  class:bv-status-warn={row.item.disp.allSt?.bad}
-                  class:bv-status-ok={row.item.disp.allSt && !row.item.disp.allSt.bad}
-                  >{row.item.disp.allSt ? row.item.disp.allSt.text : "—"}</span
-                >
-              </div>
-            {:else}
-              <div class="bv-row">
-                <span class="bv-label">Rank / percentile</span>
-                <span class="bv-value">— (not in this universe)</span>
               </div>
             {/if}
 
